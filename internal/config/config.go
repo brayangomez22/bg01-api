@@ -3,17 +3,18 @@ package config
 
 import "os"
 
-// Config holds all runtime settings. Fields are added per phase; Phase 0 only
-// needs the HTTP port.
+// Config holds all runtime settings. Fields are added per phase.
 type Config struct {
-	Port string
+	Port   string
+	DBPath string
 }
 
 // Load reads configuration from environment variables, applying sensible
 // defaults so the server runs locally with zero setup.
 func Load() Config {
 	return Config{
-		Port: env("PORT", "8080"),
+		Port:   env("PORT", "8080"),
+		DBPath: env("DB_PATH", "bg01.db"),
 	}
 }
 

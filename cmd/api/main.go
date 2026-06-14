@@ -13,13 +13,28 @@ import (
 
 	"github.com/brayangomez22/bg01-api/internal/config"
 	"github.com/brayangomez22/bg01-api/internal/server"
+	"github.com/brayangomez22/bg01-api/internal/store"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	cfg := config.Load()
-	srv := server.New(cfg, logger)
+
+	db, err := store.Open(cfg.DBPath)
+	if err != nil {
+		logger.Error("database unavailable", "err", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	if err := store.Migrate(db); err != nil {
+		logger.Error("migrations failed", "err", err)
+		os.Exit(1)
+	}
+	logger.Info("database ready", "path", cfg.DBPath)
+
+	srv := server.New(cfg, logger, store.New(db))
 
 	// Start the server in the background so we can listen for shutdown signals.
 	go func() {
