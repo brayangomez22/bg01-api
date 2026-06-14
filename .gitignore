@@ -1,0 +1,12 @@
+# Binaries
+/bin/
+*.exe
+
+# Local env
+.env
+
+# SQLite database files (data lives on the host/volume, never in git)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite

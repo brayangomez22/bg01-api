@@ -1,0 +1,14 @@
+# sqlc configuration — populated in Phase 1.
+# Generates type-safe Go from SQL in migrations/ + queries/ against SQLite.
+# Docs: https://docs.sqlc.dev
+version: "2"
+sql:
+  - engine: "sqlite"
+    schema: "migrations"
+    queries: "queries"
+    gen:
+      go:
+        package: "store"
+        out: "internal/store"
+        emit_json_tags: true
+        emit_interface: true
