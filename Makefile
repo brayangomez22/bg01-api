@@ -8,6 +8,9 @@ run: ## Run the API server
 build: ## Build the API binary to bin/api
 	go build -o bin/api ./cmd/api
 
+hashpw: ## Generate a bcrypt hash for ADMIN_PASSWORD_HASH (make hashpw PW=secret)
+	go run ./cmd/hashpw "$(PW)"
+
 tidy: ## Sync go.mod/go.sum
 	go mod tidy
 
