@@ -66,8 +66,11 @@ queries/           sqlc query files                    [Phase 1]
 ## Roadmap
 
 - Phase 0 — scaffold (✅ module, config, server, /health, graceful shutdown)
-- Phase 1 — schema + migrations + sqlc (domain.ts → SQLite)
-- Phase 2 — CRUD API + admin auth + public `/export`
-- Phase 3 — admin panel UI
-- Phase 4 — wire build-time export into the portfolio repo's GitHub Action
-- Phase 5 — deploy (Dockerfile, Fly.io) + Litestream backups
+- Phase 1 — ✅ schema + migrations + sqlc (domain.ts → SQLite)
+- Phase 2 — ✅ CRUD API + admin auth + public `/export`
+- Phase 3 — ✅ admin panel UI (lives in the portfolio repo, /control)
+- Phase 4 — ✅ build-time export wired into the portfolio's GitHub Action;
+  `POST /admin/publish` fires a repository_dispatch
+- Phase 5 — deploy artifacts ready (Dockerfile, fly.toml, deploy/litestream.yml +
+  run.sh, DEPLOY.md); image verified locally. Pending: run `fly deploy`, set
+  secrets, R2 bucket, and DNS for api.brayangomez.dev — see DEPLOY.md.

@@ -1,0 +1,43 @@
+# Fly.io configuration for the BG-01 API.
+# App name and region; secrets are set out-of-band (see DEPLOY.md), never here.
+app = "bg01-api"
+primary_region = "mia" # closest Fly region to Medellín, Colombia
+
+[build]
+
+# Non-secret runtime config. Secrets (passwords, tokens, R2 keys) go via
+# `fly secrets set` and are documented in DEPLOY.md.
+[env]
+  PORT = "8080"
+  DB_PATH = "/data/bg01.db"
+  ALLOWED_ORIGIN = "https://brayangomez.dev"
+  COOKIE_SECURE = "true"
+  PUBLISH_REPO = "brayangomez22/bg01-station"
+  LITESTREAM_BUCKET = "bg01-litestream"
+
+# Persistent volume for the SQLite file. Litestream replicates it to R2; this
+# volume is the primary copy, R2 is the offsite backup / disaster recovery.
+[mounts]
+  source = "bg01_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Build-time architecture: the API is only needed while editing/publishing,
+  # so let idle machines stop and wake on the next request to keep cost ~zero.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+
+# Single small machine is plenty for a one-user CMS.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

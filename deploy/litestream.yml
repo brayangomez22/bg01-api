@@ -1,0 +1,15 @@
+# Litestream continuously replicates the SQLite database to Cloudflare R2.
+# Env vars are interpolated at runtime (set as Fly secrets / env). R2 speaks the
+# S3 API, so it is configured as an s3 replica with region "auto" and
+# path-style addressing.
+dbs:
+  - path: ${DB_PATH}
+    replicas:
+      - type: s3
+        endpoint: ${LITESTREAM_ENDPOINT} # https://<account-id>.r2.cloudflarestorage.com
+        bucket: ${LITESTREAM_BUCKET}
+        path: bg01
+        region: auto
+        force-path-style: true
+        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}

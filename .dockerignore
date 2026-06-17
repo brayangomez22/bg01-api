@@ -1,0 +1,10 @@
+.git
+.gitignore
+.env
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+/bin
+README.md
+DEPLOY.md
