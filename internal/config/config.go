@@ -1,7 +1,11 @@
 // Package config loads runtime configuration from the environment.
 package config
 
-import "os"
+import (
+	"bufio"
+	"os"
+	"strings"
+)
 
 // Config holds all runtime settings. Fields are added per phase.
 type Config struct {
@@ -14,8 +18,12 @@ type Config struct {
 }
 
 // Load reads configuration from environment variables, applying sensible
-// defaults so the server runs locally with zero setup.
+// defaults so the server runs locally with zero setup. A local .env file is
+// loaded first as a convenience for development; real environment variables
+// always take precedence, so it is a no-op (and absent) in production.
 func Load() Config {
+	loadDotEnv(".env")
+
 	return Config{
 		Port:              env("PORT", "8080"),
 		DBPath:            env("DB_PATH", "bg01.db"),
@@ -33,4 +41,36 @@ func env(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// loadDotEnv reads simple KEY=VALUE lines from path into the process
+// environment, skipping blanks and #-comments and tolerating optional quotes
+// around values. Existing environment variables are never overwritten, so the
+// real environment wins over the file. A missing file is not an error.
+func loadDotEnv(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.Trim(strings.TrimSpace(value), `"'`)
+		if key == "" {
+			continue
+		}
+		if _, exists := os.LookupEnv(key); !exists {
+			_ = os.Setenv(key, value)
+		}
+	}
 }
