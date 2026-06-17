@@ -49,6 +49,7 @@ func (s *server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /admin/login", s.handleLogin())
 	mux.HandleFunc("POST /admin/logout", s.handleLogout())
 	mux.HandleFunc("GET /admin/session", s.requireAuth(s.handleSession()))
+	mux.HandleFunc("POST /admin/publish", s.requireAuth(s.handlePublish()))
 
 	mux.HandleFunc("GET /admin/pilot", s.requireAuth(s.handlePilotGet()))
 	mux.HandleFunc("PUT /admin/pilot", s.requireAuth(s.handlePilotPut()))

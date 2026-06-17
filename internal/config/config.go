@@ -15,6 +15,9 @@ type Config struct {
 	SessionSecret     string
 	AllowedOrigin     string
 	SecureCookies     bool
+	// Publishing: trigger the portfolio's GitHub Actions deploy on content edits.
+	PublishRepo string // "owner/name", e.g. brayangomez22/bg01-station
+	GithubToken string // PAT with permission to dispatch workflows on PublishRepo
 }
 
 // Load reads configuration from environment variables, applying sensible
@@ -32,6 +35,8 @@ func Load() Config {
 		AllowedOrigin:     os.Getenv("ALLOWED_ORIGIN"),
 		// Secure cookies on by default; set COOKIE_SECURE=false for local HTTP.
 		SecureCookies: env("COOKIE_SECURE", "true") != "false",
+		PublishRepo:   os.Getenv("PUBLISH_REPO"),
+		GithubToken:   os.Getenv("GITHUB_DISPATCH_TOKEN"),
 	}
 }
 
