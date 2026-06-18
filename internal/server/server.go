@@ -46,9 +46,13 @@ func (s *server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", s.handleHealth())
 	mux.HandleFunc("GET /export", s.handleExport())
 
+	// Public, anonymous visit beacon fired by the static portfolio on load.
+	mux.HandleFunc("POST /pulse", s.handlePulse())
+
 	mux.HandleFunc("POST /admin/login", s.handleLogin())
 	mux.HandleFunc("POST /admin/logout", s.handleLogout())
 	mux.HandleFunc("GET /admin/session", s.requireAuth(s.handleSession()))
+	mux.HandleFunc("GET /admin/stats", s.requireAuth(s.handleStats()))
 	mux.HandleFunc("POST /admin/publish", s.requireAuth(s.handlePublish()))
 
 	mux.HandleFunc("GET /admin/pilot", s.requireAuth(s.handlePilotGet()))
