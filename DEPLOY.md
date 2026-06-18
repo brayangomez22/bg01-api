@@ -35,7 +35,7 @@ fly auth login
 ```sh
 cd bg01-api
 fly apps create bg01-api                      # name must match fly.toml
-fly volumes create bg01_data --region mia --size 1   # 1 GB is ample
+fly volumes create bg01_data --region iad --size 1   # 1 GB is ample; region must match fly.toml
 ```
 
 ## 4. Secrets

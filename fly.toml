@@ -1,7 +1,7 @@
 # Fly.io configuration for the BG-01 API.
 # App name and region; secrets are set out-of-band (see DEPLOY.md), never here.
 app = "bg01-api"
-primary_region = "mia" # closest Fly region to Medellín, Colombia
+primary_region = "iad" # Ashburn, VA — best available connectivity to Colombia (Miami region retired)
 
 [build]
 
