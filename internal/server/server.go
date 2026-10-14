@@ -21,13 +21,29 @@ type server struct {
 	loginLimiter *rateLimiter
 	// pulseLimiter throttles the public POST /pulse beacon per client IP.
 	pulseLimiter *rateLimiter
+	// githubAPI and httpClient back POST /admin/publish; tests point them at
+	// a fake GitHub.
+	githubAPI  string
+	httpClient *http.Client
 }
 
 // New builds the configured *http.Server. Routes are registered on the stdlib
 // ServeMux (Go 1.22+ method-aware routing); a third-party router can be
 // introduced later without touching the entrypoint.
 func New(cfg config.Config, logger *slog.Logger, q *store.Queries) *http.Server {
-	s := &server{
+	return &http.Server{
+		Addr:              ":" + cfg.Port,
+		Handler:           newServer(cfg, logger, q).handler(),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		// Must exceed the 10s GitHub call in POST /admin/publish.
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+}
+
+func newServer(cfg config.Config, logger *slog.Logger, q *store.Queries) *server {
+	return &server{
 		cfg:    cfg,
 		logger: logger,
 		q:      q,
@@ -35,20 +51,17 @@ func New(cfg config.Config, logger *slog.Logger, q *store.Queries) *http.Server 
 
 		loginLimiter: newRateLimiter(loginAttempts, loginWindow),
 		pulseLimiter: newRateLimiter(pulseHits, pulseWindow),
-	}
 
+		githubAPI:  "https://api.github.com",
+		httpClient: http.DefaultClient,
+	}
+}
+
+// handler returns the routed mux wrapped in the shared middleware.
+func (s *server) handler() http.Handler {
 	mux := http.NewServeMux()
 	s.routes(mux)
-
-	return &http.Server{
-		Addr:              ":" + cfg.Port,
-		Handler:           cors(cfg, logging(logger, mux)),
-		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       15 * time.Second,
-		// Must exceed the 10s GitHub call in POST /admin/publish.
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
+	return cors(s.cfg, logging(s.logger, mux))
 }
 
 // routes mounts every handler. Public reads (health, export) plus the admin

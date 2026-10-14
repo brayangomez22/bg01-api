@@ -43,6 +43,13 @@ func newTestStore(t *testing.T) *store.Queries {
 // a fresh, migrated in-memory SQLite database.
 func newTestHandler(t *testing.T) http.Handler {
 	t.Helper()
+	return newTestServer(t).handler()
+}
+
+// newTestServer builds a server like newTestHandler does; each mutate func can
+// adjust its config or dependencies before the handler is built.
+func newTestServer(t *testing.T, mutate ...func(*server)) *server {
+	t.Helper()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.MinCost)
 	if err != nil {
@@ -52,7 +59,11 @@ func newTestHandler(t *testing.T) http.Handler {
 		AdminPasswordHash: string(hash),
 		SessionSecret:     testSecret,
 	}
-	return New(cfg, slog.New(slog.DiscardHandler), newTestStore(t)).Handler
+	s := newServer(cfg, slog.New(slog.DiscardHandler), newTestStore(t))
+	for _, m := range mutate {
+		m(s)
+	}
+	return s
 }
 
 // do sends one request through h and returns the recorded response.

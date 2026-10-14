@@ -21,7 +21,7 @@ func (s *server) handlePublish() http.HandlerFunc {
 		}
 
 		payload, _ := json.Marshal(map[string]string{"event_type": "content-updated"})
-		url := fmt.Sprintf("https://api.github.com/repos/%s/dispatches", s.cfg.PublishRepo)
+		url := fmt.Sprintf("%s/repos/%s/dispatches", s.githubAPI, s.cfg.PublishRepo)
 
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
@@ -35,7 +35,7 @@ func (s *server) handlePublish() http.HandlerFunc {
 		req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 		req.Header.Set("Content-Type", "application/json")
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := s.httpClient.Do(req)
 		if err != nil {
 			s.logger.Error("publish dispatch failed", "err", err)
 			s.errorJSON(w, http.StatusBadGateway, "could not reach GitHub")
