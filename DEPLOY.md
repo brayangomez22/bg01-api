@@ -119,6 +119,21 @@ In `bg01-station`:
 - **Logs:** `fly logs`
 - **SSH:** `fly ssh console` → the DB is at `/data/bg01.db`.
 - **Manual backup check:** `fly ssh console -C "litestream snapshots -config /etc/litestream.yml /data/bg01.db"`
-- **Restore drill:** delete the volume and redeploy; `run.sh` restores from R2.
+- **Snapshots & retention:** the machine only lives a few minutes per wake-up,
+  so `deploy/litestream.yml` snapshots on boot when the latest snapshot is older
+  than 24h and checks retention every minute (7 days of history kept in R2).
+  Check with `litestream snapshots` (above) and
+  `fly ssh console -C "litestream wal -config /etc/litestream.yml /data/bg01.db"`.
+- **Restore drill (non-destructive):** restore into `/tmp` on the machine, pull
+  it down, serve it locally and diff `/export` against production:
+  ```sh
+  fly ssh console -C "litestream restore -config /etc/litestream.yml -o /tmp/restore.db /data/bg01.db"
+  fly ssh sftp get /tmp/restore.db ./restore.db
+  fly ssh console -C "rm -f /tmp/restore.db"
+  # run the API locally with DB_PATH=./restore.db, then:
+  diff <(curl -s localhost:8080/export) <(curl -s https://api.brayangomez.dev/export)
+  ```
+  Last drill: 2026-10-14 — byte-identical export.
+- **Disaster recovery:** delete the volume and redeploy; `run.sh` restores from R2.
 - **Cost:** machines auto-stop when idle (`min_machines_running = 0`) and wake on
   the next request, so the API costs ~nothing between edits.
