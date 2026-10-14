@@ -19,6 +19,8 @@ type server struct {
 	secret []byte
 	// loginLimiter throttles POST /admin/login per client IP.
 	loginLimiter *rateLimiter
+	// pulseLimiter throttles the public POST /pulse beacon per client IP.
+	pulseLimiter *rateLimiter
 }
 
 // New builds the configured *http.Server. Routes are registered on the stdlib
@@ -32,6 +34,7 @@ func New(cfg config.Config, logger *slog.Logger, q *store.Queries) *http.Server 
 		secret: []byte(cfg.SessionSecret),
 
 		loginLimiter: newRateLimiter(loginAttempts, loginWindow),
+		pulseLimiter: newRateLimiter(pulseHits, pulseWindow),
 	}
 
 	mux := http.NewServeMux()
@@ -55,7 +58,7 @@ func (s *server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /export", s.handleExport())
 
 	// Public, anonymous visit beacon fired by the static portfolio on load.
-	mux.HandleFunc("POST /pulse", s.handlePulse())
+	mux.HandleFunc("POST /pulse", s.pulseLimiter.wrap(s, s.handlePulse()))
 
 	mux.HandleFunc("POST /admin/login", s.loginLimiter.wrap(s, s.handleLogin()))
 	mux.HandleFunc("POST /admin/logout", s.handleLogout())

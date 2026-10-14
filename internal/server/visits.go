@@ -3,7 +3,6 @@ package server
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"net"
 	"net/http"
 	"time"
 
@@ -26,19 +25,9 @@ func stationDay(t time.Time) string {
 // — unique-visitor counting without cookies or any durable identifier (the same
 // approach Plausible uses).
 func (s *server) visitorHash(r *http.Request, day string) string {
-	ip := r.Header.Get("Fly-Client-IP")
-	if ip == "" {
-		ip = r.Header.Get("X-Forwarded-For")
-	}
-	if ip == "" {
-		// Strip the ephemeral port so the same client maps to one hash; without
-		// this, RemoteAddr's per-connection port would defeat per-day dedupe.
-		if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
-			ip = host
-		} else {
-			ip = r.RemoteAddr
-		}
-	}
+	// clientIP strips the ephemeral port, so the same client maps to one hash
+	// per day, and ignores client-controlled headers like X-Forwarded-For.
+	ip := clientIP(r)
 	h := sha256.New()
 	h.Write(s.secret)
 	h.Write([]byte(day))

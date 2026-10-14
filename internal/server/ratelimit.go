@@ -12,6 +12,11 @@ import (
 const (
 	loginAttempts = 5
 	loginWindow   = time.Minute
+
+	// A real visitor fires one pulse per page load; this only stops floods
+	// (e.g. rotating User-Agents to mint fake unique visitors).
+	pulseHits   = 10
+	pulseWindow = time.Minute
 )
 
 // rateLimiter is a fixed-window, per-key limiter: at most limit hits per
