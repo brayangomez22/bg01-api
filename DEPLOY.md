@@ -40,7 +40,9 @@ fly volumes create bg01_data --region iad --size 1   # 1 GB is ample; region mus
 
 ## 4. Secrets
 
-Generate fresh production credentials (do not reuse local dev values):
+Generate fresh production credentials (do not reuse local dev values).
+`ADMIN_PASSWORD_HASH` and `SESSION_SECRET` (≥ 32 bytes) are mandatory: without
+them the API exits at startup and the machine will fail its health check.
 
 ```sh
 # Admin password hash (pick a strong password):

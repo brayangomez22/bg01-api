@@ -34,7 +34,13 @@ must follow.
 - **DB:** SQLite via `modernc.org/sqlite` (pure Go, no CGo). Single admin user → SQLite is the right call, not Postgres.
 - **Queries:** sqlc (type-safe Go from SQL).
 - **Migrations:** goose (`migrations/`).
-- **Auth:** single admin — bcrypt password + signed session cookie (Phase 2).
+- **Auth:** single admin — bcrypt password + HMAC-signed session cookie (Phase 2).
+  `config.Validate()` makes the API refuse to start without `ADMIN_PASSWORD_HASH`
+  or with a `SESSION_SECRET` shorter than 32 bytes. `POST /admin/login` is rate
+  limited per IP (5/min, in-memory, `Fly-Client-IP`) → 429.
+- **Hardening:** request bodies capped at 1 MB via `readJSON` (413); `http.Server`
+  has Read/ReadHeader/Write/Idle timeouts (WriteTimeout must stay above the 10s
+  GitHub call in `/admin/publish`).
 - **Backups:** Litestream (Phase 5).
 - **Config:** env vars, `config.Load()` with defaults. See `.env.example`.
 
@@ -59,7 +65,9 @@ queries/           sqlc query files                    [Phase 1]
 ## Commands
 
 - `make run` — run the server (default `:8080`, `GET /health`)
-- `make build` / `make vet` / `make test`
+- `make build` / `make vet` / `make test` — tests are table-driven with
+  `httptest`; server tests run against in-memory SQLite (`newTestHandler` in
+  `internal/server/helpers_test.go`)
 - `make tools` — install goose + sqlc
 - `make migrate-up DB_PATH=bg01.db` / `make sqlc` — Phase 1+
 
