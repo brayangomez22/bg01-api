@@ -138,7 +138,12 @@ func (s *server) handlePilotPut() http.HandlerFunc {
 			s.errorJSON(w, http.StatusInternalServerError, "db error")
 			return
 		}
-		out, _ := pilotToDomain(row)
+		out, err := pilotToDomain(row)
+		if err != nil {
+			s.logger.Error("map pilot failed", "err", err)
+			s.errorJSON(w, http.StatusInternalServerError, "decode error")
+			return
+		}
 		s.writeJSON(w, http.StatusOK, out)
 	}
 }
