@@ -31,7 +31,11 @@ func NewToken(secret []byte, ttl time.Duration) string {
 }
 
 // ValidToken reports whether token has a valid signature and has not expired.
+// An empty secret never validates: anyone can compute an HMAC with an empty key.
 func ValidToken(secret []byte, token string) bool {
+	if len(secret) == 0 {
+		return false
+	}
 	exp, sig, ok := strings.Cut(token, ".")
 	if !ok {
 		return false

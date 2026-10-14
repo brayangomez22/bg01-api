@@ -3,9 +3,16 @@ package config
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 )
+
+// MinSessionSecretLen is the minimum SESSION_SECRET length in bytes. An HMAC
+// key shorter than the hash output (32 bytes for SHA-256) weakens the session
+// signature; an empty one lets anyone forge a valid token.
+const MinSessionSecretLen = 32
 
 // Config holds all runtime settings. Fields are added per phase.
 type Config struct {
@@ -38,6 +45,19 @@ func Load() Config {
 		PublishRepo:   os.Getenv("PUBLISH_REPO"),
 		GithubToken:   os.Getenv("GITHUB_DISPATCH_TOKEN"),
 	}
+}
+
+// Validate reports configuration that would leave the API insecure. The
+// server must refuse to start rather than run with forgeable sessions.
+func (c Config) Validate() error {
+	var errs []error
+	if c.AdminPasswordHash == "" {
+		errs = append(errs, errors.New("ADMIN_PASSWORD_HASH is required"))
+	}
+	if len(c.SessionSecret) < MinSessionSecretLen {
+		errs = append(errs, fmt.Errorf("SESSION_SECRET must be at least %d bytes (got %d)", MinSessionSecretLen, len(c.SessionSecret)))
+	}
+	return errors.Join(errs...)
 }
 
 // env returns the value of key, or def when it is unset or empty.
