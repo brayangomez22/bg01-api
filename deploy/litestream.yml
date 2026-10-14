@@ -13,3 +13,10 @@ dbs:
         force-path-style: true
         access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
         secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
+        # The machine auto-stops after a few idle minutes, so hourly timers
+        # never fire. On boot Litestream snapshots at once if the latest
+        # snapshot is older than snapshot-interval, keeping restores short
+        # (latest snapshot + recent WAL) instead of replaying months of WAL.
+        snapshot-interval: 24h
+        # Point-in-time history kept in R2.
+        retention: 168h
