@@ -19,7 +19,11 @@ import (
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		logger.Error("load configuration", "err", err)
+		os.Exit(1)
+	}
 	if err := cfg.Validate(); err != nil {
 		logger.Error("invalid configuration", "err", err)
 		os.Exit(1)

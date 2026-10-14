@@ -30,9 +30,12 @@ type Config struct {
 // Load reads configuration from environment variables, applying sensible
 // defaults so the server runs locally with zero setup. A local .env file is
 // loaded first as a convenience for development; real environment variables
-// always take precedence, so it is a no-op (and absent) in production.
-func Load() Config {
-	loadDotEnv(".env")
+// always take precedence, so it is a no-op (and absent) in production. A .env
+// that exists but cannot be read is an error.
+func Load() (Config, error) {
+	if err := loadDotEnv(".env"); err != nil {
+		return Config{}, err
+	}
 
 	return Config{
 		Port:              env("PORT", "8080"),
@@ -44,7 +47,7 @@ func Load() Config {
 		SecureCookies: env("COOKIE_SECURE", "true") != "false",
 		PublishRepo:   os.Getenv("PUBLISH_REPO"),
 		GithubToken:   os.Getenv("GITHUB_DISPATCH_TOKEN"),
-	}
+	}, nil
 }
 
 // Validate reports configuration that would leave the API insecure. The
@@ -72,10 +75,13 @@ func env(key, def string) string {
 // environment, skipping blanks and #-comments and tolerating optional quotes
 // around values. Existing environment variables are never overwritten, so the
 // real environment wins over the file. A missing file is not an error.
-func loadDotEnv(path string) {
+func loadDotEnv(path string) error {
 	f, err := os.Open(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
 	if err != nil {
-		return
+		return fmt.Errorf("open %s: %w", path, err)
 	}
 	defer f.Close()
 
@@ -98,4 +104,8 @@ func loadDotEnv(path string) {
 			_ = os.Setenv(key, value)
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("read %s: %w", path, err)
+	}
+	return nil
 }
