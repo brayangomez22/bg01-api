@@ -45,7 +45,9 @@ must follow.
 - **Hardening:** request bodies capped at 1 MB via `readJSON` (413); `http.Server`
   has Read/ReadHeader/Write/Idle timeouts (WriteTimeout must stay above the 10s
   GitHub call in `/admin/publish`).
-- **Backups:** Litestream (Phase 5).
+- **Backups:** Litestream (Phase 5, pinned at 0.3.13).
+- **Container:** alpine 3.24; `deploy/run.sh` starts as root only to chown the
+  Fly volume, then re-execs as the unprivileged `app` user via su-exec.
 - **Config:** env vars, `config.Load()` with defaults. See `.env.example`.
 
 Pragmatic schema: list fields (highlights, challenges, metrics, technologies refs,
@@ -73,6 +75,10 @@ queries/           sqlc query files                    [Phase 1]
   `httptest`; server tests run against in-memory SQLite (`newTestHandler` in
   `internal/server/helpers_test.go`). `TestMapperRoundTrip` requires every
   domain field populated: when domain.go gains a field, extend its fixture.
+  Tests inject dependencies via `newTestServer(t, func(s *server){…})`: the
+  GitHub API URL/client (`/admin/publish`) and the clock (`s.now`, visits).
+- CI: `.github/workflows/ci.yml` runs gofmt, vet, `test -race`, build and a
+  `docker build` on pushes to main and on PRs.
 - `make tools` — install goose + sqlc
 - `make migrate-up DB_PATH=bg01.db` / `make sqlc` — Phase 1+
 
