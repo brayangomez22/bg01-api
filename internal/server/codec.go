@@ -3,8 +3,12 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
+
+// maxBodyBytes caps request bodies; content payloads are a few KB at most.
+const maxBodyBytes = 1 << 20 // 1 MB
 
 // writeJSON sends v as a JSON response with the given status.
 func (s *server) writeJSON(w http.ResponseWriter, status int, v any) {
@@ -20,11 +24,22 @@ func (s *server) errorJSON(w http.ResponseWriter, status int, msg string) {
 	s.writeJSON(w, status, map[string]string{"error": msg})
 }
 
-// readJSON decodes the request body into dst, rejecting unknown fields.
-func readJSON(r *http.Request, dst any) error {
-	dec := json.NewDecoder(r.Body)
+// readJSON decodes the request body into dst, rejecting unknown fields and
+// bodies larger than maxBodyBytes.
+func readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBodyBytes))
 	dec.DisallowUnknownFields()
 	return dec.Decode(dst)
+}
+
+// badBody answers a readJSON failure: 413 when the body hit the size cap,
+// 400 otherwise.
+func (s *server) badBody(w http.ResponseWriter, err error) {
+	if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
+		s.errorJSON(w, http.StatusRequestEntityTooLarge, "body too large")
+		return
+	}
+	s.errorJSON(w, http.StatusBadRequest, "invalid body")
 }
 
 // --- scalar conversions between domain and store representations ---

@@ -41,6 +41,10 @@ func New(cfg config.Config, logger *slog.Logger, q *store.Queries) *http.Server 
 		Addr:              ":" + cfg.Port,
 		Handler:           cors(cfg, logging(logger, mux)),
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		// Must exceed the 10s GitHub call in POST /admin/publish.
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 }
 

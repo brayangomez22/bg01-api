@@ -53,8 +53,8 @@ func (rs resource[Row, Dom, Params]) handleList(s *server) http.HandlerFunc {
 func (rs resource[Row, Dom, Params]) handleUpsert(s *server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var d Dom
-		if err := readJSON(r, &d); err != nil {
-			s.errorJSON(w, http.StatusBadRequest, "invalid body")
+		if err := readJSON(w, r, &d); err != nil {
+			s.badBody(w, err)
 			return
 		}
 		params, err := rs.fromDom(d)
@@ -112,8 +112,8 @@ func (s *server) handlePilotGet() http.HandlerFunc {
 func (s *server) handlePilotPut() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var d domain.Pilot
-		if err := readJSON(r, &d); err != nil {
-			s.errorJSON(w, http.StatusBadRequest, "invalid body")
+		if err := readJSON(w, r, &d); err != nil {
+			s.badBody(w, err)
 			return
 		}
 		params, err := pilotFromDomain(d)

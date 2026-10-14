@@ -35,8 +35,8 @@ func (s *server) handleLogin() http.HandlerFunc {
 			return
 		}
 		var body request
-		if err := readJSON(r, &body); err != nil {
-			s.errorJSON(w, http.StatusBadRequest, "invalid body")
+		if err := readJSON(w, r, &body); err != nil {
+			s.badBody(w, err)
 			return
 		}
 		if !auth.CheckPassword(s.cfg.AdminPasswordHash, body.Password) {
