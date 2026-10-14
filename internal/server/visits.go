@@ -41,7 +41,7 @@ func (s *server) visitorHash(r *http.Request, day string) string {
 // and swallows every error: analytics must never disturb a page load.
 func (s *server) handlePulse() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		day := stationDay(time.Now())
+		day := stationDay(s.now())
 		if err := s.q.RecordVisit(r.Context(), day, s.visitorHash(r, day)); err != nil {
 			s.logger.Error("record visit failed", "err", err)
 		}
@@ -63,7 +63,7 @@ type visitStats struct {
 // 7-day series for the mini chart.
 func (s *server) handleStats() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		now := time.Now()
+		now := s.now()
 
 		// The 7-day window ending today, as station-local day strings.
 		days := make([]string, 7)

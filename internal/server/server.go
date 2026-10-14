@@ -25,6 +25,8 @@ type server struct {
 	// a fake GitHub.
 	githubAPI  string
 	httpClient *http.Client
+	// now is the clock for visit days; tests freeze it.
+	now func() time.Time
 }
 
 // New builds the configured *http.Server. Routes are registered on the stdlib
@@ -54,6 +56,7 @@ func newServer(cfg config.Config, logger *slog.Logger, q *store.Queries) *server
 
 		githubAPI:  "https://api.github.com",
 		httpClient: http.DefaultClient,
+		now:        time.Now,
 	}
 }
 
