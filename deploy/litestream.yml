@@ -18,5 +18,8 @@ dbs:
         # snapshot is older than snapshot-interval, keeping restores short
         # (latest snapshot + recent WAL) instead of replaying months of WAL.
         snapshot-interval: 24h
-        # Point-in-time history kept in R2.
+        # Point-in-time history kept in R2. The default hourly check would never
+        # run on a short-lived machine; checking every minute prunes snapshots
+        # and WAL older than the retention window while it is awake.
         retention: 168h
+        retention-check-interval: 1m
