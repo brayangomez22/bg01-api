@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"regexp"
 
 	"github.com/brayangomez22/bg01-api/internal/domain"
 )
@@ -11,12 +12,18 @@ import (
 // store row type (Row), its domain contract type (Dom) and its upsert params
 // type (Params). It lets every resource share one generic set of handlers.
 type resource[Row any, Dom any, Params any] struct {
+	key     func(Dom) string // primary key, validated on upsert
 	list    func(context.Context) ([]Row, error)
 	toDom   func(Row) (Dom, error)
 	fromDom func(Dom) (Params, error)
 	upsert  func(context.Context, Params) (Row, error)
 	del     func(context.Context, string) error
 }
+
+// keyPattern is the shape every primary key must have: URL-safe (so DELETE
+// /admin/<name>/{id} can always reach the row) and wide enough for slugs,
+// GitHub repo names (mixed case, dots) and dotted site-copy keys.
+var keyPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$`)
 
 // registerResource mounts GET (list), PUT (upsert) and DELETE on /admin/<name>,
 // all behind auth. The DELETE id segment is positional regardless of the real
@@ -55,6 +62,10 @@ func (rs resource[Row, Dom, Params]) handleUpsert(s *server) http.HandlerFunc {
 		var d Dom
 		if err := readJSON(w, r, &d); err != nil {
 			s.badBody(w, err)
+			return
+		}
+		if !keyPattern.MatchString(rs.key(d)) {
+			s.errorJSON(w, http.StatusBadRequest, "invalid id: use 1-100 of A-Z a-z 0-9 . _ -, starting with a letter or digit")
 			return
 		}
 		params, err := rs.fromDom(d)

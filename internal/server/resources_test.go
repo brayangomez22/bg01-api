@@ -96,3 +96,41 @@ func mustDecode(t *testing.T, b []byte, dst any) {
 		t.Fatalf("decode %s: %v", b, err)
 	}
 }
+
+func TestResourceKeyValidation(t *testing.T) {
+	h := newTestHandler(t)
+	auth := withCookie(login(t, h))
+
+	tests := []struct {
+		name   string
+		path   string
+		body   string
+		status int
+	}{
+		{"slug", "/admin/technologies", `{"id":"go-lang_2"}`, http.StatusOK},
+		{"mixed-case repo name", "/admin/training", `{"repo":"TeamOne"}`, http.StatusOK},
+		{"dotted site-copy key", "/admin/site-copy", `{"key":"hero.title","value":"Hi"}`, http.StatusOK},
+		{"max length", "/admin/technologies", `{"id":"` + strings.Repeat("a", 100) + `"}`, http.StatusOK},
+		{"too long", "/admin/technologies", `{"id":"` + strings.Repeat("a", 101) + `"}`, http.StatusBadRequest},
+		{"space", "/admin/technologies", `{"id":"go lang"}`, http.StatusBadRequest},
+		{"slash", "/admin/technologies", `{"id":"go/lang"}`, http.StatusBadRequest},
+		{"leading dot", "/admin/technologies", `{"id":".hidden"}`, http.StatusBadRequest},
+		{"non-ascii", "/admin/technologies", `{"id":"canción"}`, http.StatusBadRequest},
+		// Every resource must reject a missing key (proves key is wired for each).
+		{"empty technologies", "/admin/technologies", `{}`, http.StatusBadRequest},
+		{"empty missions", "/admin/missions", `{}`, http.StatusBadRequest},
+		{"empty experiences", "/admin/experiences", `{}`, http.StatusBadRequest},
+		{"empty training", "/admin/training", `{}`, http.StatusBadRequest},
+		{"empty archive sections", "/admin/archive/sections", `{}`, http.StatusBadRequest},
+		{"empty archive records", "/admin/archive/records", `{}`, http.StatusBadRequest},
+		{"empty frequencies", "/admin/frequencies", `{}`, http.StatusBadRequest},
+		{"empty site-copy", "/admin/site-copy", `{}`, http.StatusBadRequest},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if rec := do(h, http.MethodPut, tt.path, tt.body, auth); rec.Code != tt.status {
+				t.Errorf("status = %d, want %d (body %s)", rec.Code, tt.status, rec.Body)
+			}
+		})
+	}
+}
