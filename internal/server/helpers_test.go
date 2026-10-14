@@ -20,9 +20,8 @@ const (
 	testSecret   = "0123456789abcdef0123456789abcdef"
 )
 
-// newTestHandler returns the full API handler (middleware included) backed by
-// a fresh, migrated in-memory SQLite database.
-func newTestHandler(t *testing.T) http.Handler {
+// newTestStore returns queries over a fresh, migrated in-memory SQLite database.
+func newTestStore(t *testing.T) *store.Queries {
 	t.Helper()
 
 	db, err := store.Open(":memory:")
@@ -37,6 +36,13 @@ func newTestHandler(t *testing.T) http.Handler {
 	if err := store.Migrate(db); err != nil {
 		t.Fatal(err)
 	}
+	return store.New(db)
+}
+
+// newTestHandler returns the full API handler (middleware included) backed by
+// a fresh, migrated in-memory SQLite database.
+func newTestHandler(t *testing.T) http.Handler {
+	t.Helper()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(testPassword), bcrypt.MinCost)
 	if err != nil {
@@ -46,7 +52,7 @@ func newTestHandler(t *testing.T) http.Handler {
 		AdminPasswordHash: string(hash),
 		SessionSecret:     testSecret,
 	}
-	return New(cfg, slog.New(slog.DiscardHandler), store.New(db)).Handler
+	return New(cfg, slog.New(slog.DiscardHandler), newTestStore(t)).Handler
 }
 
 // do sends one request through h and returns the recorded response.
