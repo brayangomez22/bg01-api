@@ -37,7 +37,11 @@ must follow.
 - **Auth:** single admin — bcrypt password + HMAC-signed session cookie (Phase 2).
   `config.Validate()` makes the API refuse to start without `ADMIN_PASSWORD_HASH`
   or with a `SESSION_SECRET` shorter than 32 bytes. `POST /admin/login` is rate
-  limited per IP (5/min, in-memory, `Fly-Client-IP`) → 429.
+  limited per IP (5/min, in-memory, `Fly-Client-IP`) → 429; the public
+  `POST /pulse` beacon too (10/min). Always use `clientIP()`, never
+  `X-Forwarded-For`.
+- **Validation:** each generic resource declares its primary `key`; upserts
+  reject keys not matching `keyPattern` (URL-safe, ≤100 chars) with 400.
 - **Hardening:** request bodies capped at 1 MB via `readJSON` (413); `http.Server`
   has Read/ReadHeader/Write/Idle timeouts (WriteTimeout must stay above the 10s
   GitHub call in `/admin/publish`).
@@ -67,7 +71,8 @@ queries/           sqlc query files                    [Phase 1]
 - `make run` — run the server (default `:8080`, `GET /health`)
 - `make build` / `make vet` / `make test` — tests are table-driven with
   `httptest`; server tests run against in-memory SQLite (`newTestHandler` in
-  `internal/server/helpers_test.go`)
+  `internal/server/helpers_test.go`). `TestMapperRoundTrip` requires every
+  domain field populated: when domain.go gains a field, extend its fixture.
 - `make tools` — install goose + sqlc
 - `make migrate-up DB_PATH=bg01.db` / `make sqlc` — Phase 1+
 

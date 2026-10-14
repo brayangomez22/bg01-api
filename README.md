@@ -32,6 +32,10 @@ curl localhost:8080/health
 - `POST /admin/login` is rate limited to 5 attempts per minute per client IP
   (`Fly-Client-IP`, falling back to the peer address) and answers `429` with
   `Retry-After`.
+- The public `POST /pulse` visit beacon is limited to 10 hits per minute per IP
+  (stops fake-visitor floods); `X-Forwarded-For` is ignored.
+- Content upserts require a URL-safe primary key
+  (`^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$`), otherwise `400`.
 - Request bodies are capped at 1 MB (`413`); the server sets read, write and
   idle timeouts.
 
