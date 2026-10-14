@@ -90,6 +90,6 @@ queries/           sqlc query files                    [Phase 1]
 - Phase 3 — ✅ admin panel UI (lives in the portfolio repo, /control)
 - Phase 4 — ✅ build-time export wired into the portfolio's GitHub Action;
   `POST /admin/publish` fires a repository_dispatch
-- Phase 5 — deploy artifacts ready (Dockerfile, fly.toml, deploy/litestream.yml +
-  run.sh, DEPLOY.md); image verified locally. Pending: run `fly deploy`, set
-  secrets, R2 bucket, and DNS for api.brayangomez.dev — see DEPLOY.md.
+- Phase 5 — ✅ deployed on Fly.io (app `bg01-api`, region iad, volume
+  `bg01_data`, Litestream → R2 bucket `bg01-litestream`), served at
+  https://api.brayangomez.dev. Redeploy with `fly deploy` — see DEPLOY.md.
