@@ -16,9 +16,11 @@ FROM litestream/litestream:0.3.13 AS litestream
 
 # ── runtime ──────────────────────────────────────────────────────────────────
 # alpine (not scratch/distroless) because the entrypoint needs a shell to
-# restore-then-replicate. ca-certificates lets us reach R2 and the GitHub API.
-FROM alpine:3.20
-RUN apk add --no-cache ca-certificates
+# restore-then-replicate. ca-certificates lets us reach R2 and the GitHub API;
+# su-exec lets run.sh drop from root to the unprivileged app user.
+FROM alpine:3.24
+RUN apk add --no-cache ca-certificates su-exec \
+ && adduser -D -H -u 10001 app
 COPY --from=build /out/api /app/api
 COPY --from=litestream /usr/local/bin/litestream /usr/local/bin/litestream
 COPY deploy/litestream.yml /etc/litestream.yml
