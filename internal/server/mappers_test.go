@@ -42,7 +42,7 @@ func TestMapperRoundTrip(t *testing.T) {
 				DurationLabel: "6 meses", Period: domain.Period{Start: "2023-01", End: "2023-06"},
 				Technologies: []string{"go"}, Highlights: []string{"h"}, Challenges: []string{"c"},
 				Metrics: []domain.LabelledValue{{Label: "p99", Value: "40ms"}},
-				Links:   domain.MissionLinks{Live: "https://x.dev", Repo: "https://github.com/x", CaseStudy: "/case"},
+				Links:   domain.MissionLinks{Live: "https://x.dev", Repo: "https://github.com/x", CaseStudy: "/case", Restricted: true},
 				Cover:   media, Gallery: []domain.MediaRef{media}, Featured: true, Order: 2,
 			}
 			return in, roundTrip(t, in, missionFromDomain, q.UpsertMission, missionToDomain)

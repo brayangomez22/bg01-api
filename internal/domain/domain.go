@@ -39,11 +39,14 @@ type Pilot struct {
 	ResumeURL string          `json:"resumeUrl"`
 }
 
-// MissionLinks holds optional external references for a mission.
+// MissionLinks holds optional external references for a mission. Restricted
+// marks client work under a confidentiality agreement: the station explains
+// why there is no code or screenshots instead of leaving the links empty.
 type MissionLinks struct {
-	Live      string `json:"live,omitempty"`
-	Repo      string `json:"repo,omitempty"`
-	CaseStudy string `json:"caseStudy,omitempty"`
+	Live       string `json:"live,omitempty"`
+	Repo       string `json:"repo,omitempty"`
+	CaseStudy  string `json:"caseStudy,omitempty"`
+	Restricted bool   `json:"restricted,omitempty"`
 }
 
 // Mission is a project.
