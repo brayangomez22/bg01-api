@@ -104,7 +104,6 @@ type Technology struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
-	Proficiency int64  `json:"proficiency"`
 	Since       string `json:"since"`
 	Description string `json:"description"`
 	Planet      string `json:"planet"`
@@ -123,4 +122,10 @@ type TrainingSim struct {
 	RepoUrl   string `json:"repo_url"`
 	SortOrder int64  `json:"sort_order"`
 	UpdatedAt string `json:"updated_at"`
+}
+
+type Visit struct {
+	Day         string `json:"day"`
+	VisitorHash string `json:"visitor_hash"`
+	CreatedAt   string `json:"created_at"`
 }

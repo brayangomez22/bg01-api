@@ -31,7 +31,7 @@ func TestMapperRoundTrip(t *testing.T) {
 		}},
 		{"technology", func(t *testing.T) (any, any) {
 			in := domain.Technology{
-				ID: "go", Name: "Go", Category: "language", Proficiency: 90, Since: "2021-01-01", Description: "d",
+				ID: "go", Name: "Go", Category: "language", Since: "2021-01-01", Description: "d",
 				Planet: domain.TechnologyPlanet{Color: "#00ADD8", Size: "m", Orbit: 2}, Featured: true, Order: 1,
 			}
 			return in, roundTrip(t, in, technologyFromDomain, q.UpsertTechnology, technologyToDomain)

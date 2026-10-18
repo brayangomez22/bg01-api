@@ -83,7 +83,6 @@ type Technology struct {
 	ID             string           `json:"id"`
 	Name           string           `json:"name"`
 	Category       string           `json:"category"`
-	Proficiency    int              `json:"proficiency"`
 	Since          string           `json:"since"`
 	Description    string           `json:"description"`
 	UsedInMissions []string         `json:"usedInMissions,omitempty"`

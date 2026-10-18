@@ -19,7 +19,7 @@ func (q *Queries) DeleteTechnology(ctx context.Context, id string) error {
 }
 
 const getTechnology = `-- name: GetTechnology :one
-SELECT id, name, category, proficiency, since, description, planet, featured, sort_order, updated_at FROM technologies WHERE id = ?1
+SELECT id, name, category, since, description, planet, featured, sort_order, updated_at FROM technologies WHERE id = ?1
 `
 
 func (q *Queries) GetTechnology(ctx context.Context, id string) (Technology, error) {
@@ -29,7 +29,6 @@ func (q *Queries) GetTechnology(ctx context.Context, id string) (Technology, err
 		&i.ID,
 		&i.Name,
 		&i.Category,
-		&i.Proficiency,
 		&i.Since,
 		&i.Description,
 		&i.Planet,
@@ -41,7 +40,7 @@ func (q *Queries) GetTechnology(ctx context.Context, id string) (Technology, err
 }
 
 const listTechnologies = `-- name: ListTechnologies :many
-SELECT id, name, category, proficiency, since, description, planet, featured, sort_order, updated_at FROM technologies ORDER BY sort_order, name
+SELECT id, name, category, since, description, planet, featured, sort_order, updated_at FROM technologies ORDER BY sort_order, name
 `
 
 func (q *Queries) ListTechnologies(ctx context.Context) ([]Technology, error) {
@@ -57,7 +56,6 @@ func (q *Queries) ListTechnologies(ctx context.Context) ([]Technology, error) {
 			&i.ID,
 			&i.Name,
 			&i.Category,
-			&i.Proficiency,
 			&i.Since,
 			&i.Description,
 			&i.Planet,
@@ -79,26 +77,24 @@ func (q *Queries) ListTechnologies(ctx context.Context) ([]Technology, error) {
 }
 
 const upsertTechnology = `-- name: UpsertTechnology :one
-INSERT INTO technologies (id, name, category, proficiency, since, description, planet, featured, sort_order)
-VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+INSERT INTO technologies (id, name, category, since, description, planet, featured, sort_order)
+VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
 ON CONFLICT(id) DO UPDATE SET
     name        = excluded.name,
     category    = excluded.category,
-    proficiency = excluded.proficiency,
     since       = excluded.since,
     description = excluded.description,
     planet      = excluded.planet,
     featured    = excluded.featured,
     sort_order  = excluded.sort_order,
     updated_at  = datetime('now')
-RETURNING id, name, category, proficiency, since, description, planet, featured, sort_order, updated_at
+RETURNING id, name, category, since, description, planet, featured, sort_order, updated_at
 `
 
 type UpsertTechnologyParams struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
-	Proficiency int64  `json:"proficiency"`
 	Since       string `json:"since"`
 	Description string `json:"description"`
 	Planet      string `json:"planet"`
@@ -111,7 +107,6 @@ func (q *Queries) UpsertTechnology(ctx context.Context, arg UpsertTechnologyPara
 		arg.ID,
 		arg.Name,
 		arg.Category,
-		arg.Proficiency,
 		arg.Since,
 		arg.Description,
 		arg.Planet,
@@ -123,7 +118,6 @@ func (q *Queries) UpsertTechnology(ctx context.Context, arg UpsertTechnologyPara
 		&i.ID,
 		&i.Name,
 		&i.Category,
-		&i.Proficiency,
 		&i.Since,
 		&i.Description,
 		&i.Planet,

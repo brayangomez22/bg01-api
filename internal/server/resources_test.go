@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -13,7 +12,7 @@ import (
 // The generic resource handlers are exercised through /admin/technologies;
 // every other content type shares the same code path.
 
-const goTech = `{"id":"go","name":"Go","category":"language","proficiency":80,"since":"2023-01-01",` +
+const goTech = `{"id":"go","name":"Go","category":"language","since":"2023-01-01",` +
 	`"description":"Backend.","planet":{"color":"#00ADD8","size":"md","orbit":2},"featured":true,"order":1}`
 
 func TestResourceCRUD(t *testing.T) {
@@ -36,11 +35,12 @@ func TestResourceCRUD(t *testing.T) {
 				t.Errorf("created = %+v", got)
 			}
 		}},
-		{"list has it", "GET", "/admin/technologies", "", http.StatusOK, wantTechs("go:80")},
-		{"update same id", "PUT", "/admin/technologies", strings.Replace(goTech, `"proficiency":80`, `"proficiency":95`, 1), http.StatusOK, nil},
-		{"list reflects update", "GET", "/admin/technologies", "", http.StatusOK, wantTechs("go:95")},
+		{"list has it", "GET", "/admin/technologies", "", http.StatusOK, wantTechs("go:2023-01-01")},
+		{"update same id", "PUT", "/admin/technologies", strings.Replace(goTech, `"since":"2023-01-01"`, `"since":"2021-01-01"`, 1), http.StatusOK, nil},
+		{"list reflects update", "GET", "/admin/technologies", "", http.StatusOK, wantTechs("go:2021-01-01")},
 		{"malformed json", "PUT", "/admin/technologies", `{"id":`, http.StatusBadRequest, nil},
 		{"unknown field", "PUT", "/admin/technologies", `{"id":"x","bogus":1}`, http.StatusBadRequest, nil},
+		{"removed proficiency field", "PUT", "/admin/technologies", strings.Replace(goTech, `"since"`, `"proficiency":80,"since"`, 1), http.StatusBadRequest, nil},
 		{"body over 1 MB", "PUT", "/admin/technologies", `{"description":"` + strings.Repeat("a", maxBodyBytes) + `"}`, http.StatusRequestEntityTooLarge, nil},
 		{"delete", "DELETE", "/admin/technologies/go", "", http.StatusNoContent, nil},
 		{"list is empty again", "GET", "/admin/technologies", "", http.StatusOK, wantTechs()},
@@ -75,14 +75,14 @@ func TestResourceRequiresAuth(t *testing.T) {
 	}
 }
 
-// wantTechs checks a list response against "id:proficiency" pairs, in order.
+// wantTechs checks a list response against "id:since" pairs, in order.
 func wantTechs(want ...string) func(t *testing.T, body []byte) {
 	return func(t *testing.T, body []byte) {
 		var list []domain.Technology
 		mustDecode(t, body, &list)
 		got := make([]string, len(list))
 		for i, tech := range list {
-			got[i] = tech.ID + ":" + strconv.Itoa(tech.Proficiency)
+			got[i] = tech.ID + ":" + tech.Since
 		}
 		if strings.Join(got, ",") != strings.Join(want, ",") {
 			t.Errorf("list = %v, want %v", got, want)

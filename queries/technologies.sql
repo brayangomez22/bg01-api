@@ -5,12 +5,11 @@ SELECT * FROM technologies ORDER BY sort_order, name;
 SELECT * FROM technologies WHERE id = @id;
 
 -- name: UpsertTechnology :one
-INSERT INTO technologies (id, name, category, proficiency, since, description, planet, featured, sort_order)
-VALUES (@id, @name, @category, @proficiency, @since, @description, @planet, @featured, @sort_order)
+INSERT INTO technologies (id, name, category, since, description, planet, featured, sort_order)
+VALUES (@id, @name, @category, @since, @description, @planet, @featured, @sort_order)
 ON CONFLICT(id) DO UPDATE SET
     name        = excluded.name,
     category    = excluded.category,
-    proficiency = excluded.proficiency,
     since       = excluded.since,
     description = excluded.description,
     planet      = excluded.planet,
